@@ -11,6 +11,7 @@ import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
+const securityprocessPath = '/securityprocess';
 
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -33,7 +34,7 @@ export async function getInitialState(): Promise<{
     return undefined;
   };
   // 如果不是登录页面，执行
-  if (window.location.pathname !== loginPath) {
+  if (window.location.pathname !== loginPath && window.location.pathname !== securityprocessPath) {
     const currentUser = await fetchUserInfo();
     return {
       fetchUserInfo,

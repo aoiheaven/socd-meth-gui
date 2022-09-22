@@ -21,6 +21,12 @@ export default [
     ],
   },
   {
+    path: '/securityprocess',
+    name: 'securityprocess',
+    layout: false,
+    component: '../SecurityProcess',
+  },
+  {
     path: '/welcome',
     name: 'welcome',
     icon: 'smile',

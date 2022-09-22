@@ -37,7 +37,7 @@ const LoginMessage: React.FC<{
 
 const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
-  const [type, setType] = useState<string>('account');
+  const [type, setType] = useState<string>('sso');
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const intl = useIntl();
@@ -53,30 +53,36 @@ const Login: React.FC = () => {
   };
 
   const handleSubmit = async (values: API.LoginParams) => {
-    try {
-      // 登录
-      const msg = await login({ ...values, type });
-      if (msg.status === 'ok') {
-        const defaultLoginSuccessMessage = intl.formatMessage({
-          id: 'pages.login.success',
-          defaultMessage: '登录成功！',
+    if (type === 'sso') {
+      const REDIRECT_URL =
+        'https://login.microsoftonline.com/43083d15-7273-40c1-b7db-39efd9ccc17a/oauth2/v2.0/authorize?client_id=a2a099b9-487c-4c63-a9fe-5a613d1e90e9&response_type=id_token&scope=openid profile email&state=12345&nonce=678910&redirect_uri=http://localhost:8000/securityprocess';
+      window.location.replace(REDIRECT_URL);
+    } else {
+      try {
+        // 登录
+        const msg = await login({ ...values, type });
+        if (msg.status === 'ok') {
+          const defaultLoginSuccessMessage = intl.formatMessage({
+            id: 'pages.login.success',
+            defaultMessage: '登录成功！',
+          });
+          message.success(defaultLoginSuccessMessage);
+          await fetchUserInfo();
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/');
+          return;
+        }
+        console.log(msg);
+        // 如果失败去设置用户错误信息
+        setUserLoginState(msg);
+      } catch (error) {
+        const defaultLoginFailureMessage = intl.formatMessage({
+          id: 'pages.login.failure',
+          defaultMessage: '登录失败，请重试！',
         });
-        message.success(defaultLoginSuccessMessage);
-        await fetchUserInfo();
-        const urlParams = new URL(window.location.href).searchParams;
-        history.push(urlParams.get('redirect') || '/');
-        return;
+        console.log(error);
+        message.error(defaultLoginFailureMessage);
       }
-      console.log(msg);
-      // 如果失败去设置用户错误信息
-      setUserLoginState(msg);
-    } catch (error) {
-      const defaultLoginFailureMessage = intl.formatMessage({
-        id: 'pages.login.failure',
-        defaultMessage: '登录失败，请重试！',
-      });
-      console.log(error);
-      message.error(defaultLoginFailureMessage);
     }
   };
   const { status, type: loginType } = userLoginState;
@@ -109,6 +115,7 @@ const Login: React.FC = () => {
           }}
         >
           <Tabs activeKey={type} onChange={setType} centered>
+            <Tabs.TabPane key="sso" tab="Azure SSO Login" />
             <Tabs.TabPane
               key="account"
               tab={intl.formatMessage({
